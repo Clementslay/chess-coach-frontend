@@ -31,7 +31,7 @@ export const GameReviewSummary: React.FC<GameReviewSummaryProps> = ({
   summary
 }) => {
   return (
-    <div className="rounded-2xl bg-[#262522] border border-[#363531] p-5 flex flex-col gap-5 shadow-xl">
+    <div className="rounded-xl sm:rounded-2xl bg-[#262522] border border-[#363531] p-3.5 sm:p-5 flex flex-col gap-4 sm:gap-5 shadow-xl">
       {/* Title */}
       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-400">
         <Trophy className="w-4 h-4 text-[#81b64c]" />
@@ -39,16 +39,16 @@ export const GameReviewSummary: React.FC<GameReviewSummaryProps> = ({
       </div>
 
       {/* Accuracy Section */}
-      <div className="grid grid-cols-2 gap-3 p-3.5 rounded-xl bg-[#1e2022] border border-[#363531]">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 p-3 sm:p-3.5 rounded-xl bg-[#1e2022] border border-[#363531]">
         {/* White accuracy */}
-        <div>
-          <span className="text-[11px] text-gray-400 truncate block">{whiteName} (White)</span>
+        <div className="min-w-0">
+          <span className="text-[10px] sm:text-[11px] text-gray-400 truncate block">{whiteName} (White)</span>
           <div className="flex items-baseline gap-1 mt-0.5">
-            <span className="text-2xl font-black font-mono text-white">{whiteAccuracy}%</span>
-            <span className="text-[10px] text-gray-400">acc</span>
+            <span className="text-xl sm:text-2xl font-black font-mono text-white">{whiteAccuracy}%</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400">acc</span>
           </div>
           {/* Progress bar */}
-          <div className="w-full bg-[#363531] h-1.5 rounded-full overflow-hidden mt-1.5">
+          <div className="w-full bg-[#363531] h-1.5 rounded-full overflow-hidden mt-1 sm:mt-1.5">
             <div 
               className="bg-[#81b64c] h-full rounded-full transition-all duration-500"
               style={{ width: `${whiteAccuracy}%` }}
@@ -57,14 +57,14 @@ export const GameReviewSummary: React.FC<GameReviewSummaryProps> = ({
         </div>
 
         {/* Black accuracy */}
-        <div>
-          <span className="text-[11px] text-gray-400 truncate block">{blackName} (Black)</span>
+        <div className="min-w-0">
+          <span className="text-[10px] sm:text-[11px] text-gray-400 truncate block">{blackName} (Black)</span>
           <div className="flex items-baseline gap-1 mt-0.5">
-            <span className="text-2xl font-black font-mono text-white">{blackAccuracy}%</span>
-            <span className="text-[10px] text-gray-400">acc</span>
+            <span className="text-xl sm:text-2xl font-black font-mono text-white">{blackAccuracy}%</span>
+            <span className="text-[9px] sm:text-[10px] text-gray-400">acc</span>
           </div>
           {/* Progress bar */}
-          <div className="w-full bg-[#363531] h-1.5 rounded-full overflow-hidden mt-1.5">
+          <div className="w-full bg-[#363531] h-1.5 rounded-full overflow-hidden mt-1 sm:mt-1.5">
             <div 
               className="bg-[#81b64c] h-full rounded-full transition-all duration-500"
               style={{ width: `${blackAccuracy}%` }}
@@ -76,9 +76,9 @@ export const GameReviewSummary: React.FC<GameReviewSummaryProps> = ({
       {/* Move Classification Breakdown */}
       <div>
         <div className="grid grid-cols-[1fr_auto_1fr] text-[10px] font-bold uppercase tracking-wider text-gray-400 pb-2 border-b border-[#363531]">
-          <span className="text-left truncate">{whiteName}</span>
-          <span className="text-center px-3">Classification</span>
-          <span className="text-right truncate">{blackName}</span>
+          <span className="text-left truncate pr-1">{whiteName}</span>
+          <span className="text-center px-2 sm:px-3">Category</span>
+          <span className="text-right truncate pl-1">{blackName}</span>
         </div>
 
         <div className="divide-y divide-[#363531]/40 text-xs font-mono">
@@ -92,7 +92,7 @@ export const GameReviewSummary: React.FC<GameReviewSummaryProps> = ({
             return (
               <div 
                 key={cat.key} 
-                className="grid grid-cols-[1fr_auto_1fr] items-center py-1.5 text-xs"
+                className="grid grid-cols-[1fr_auto_1fr] items-center py-1 sm:py-1.5 text-xs"
               >
                 {/* White count */}
                 <span className={`text-left font-bold ${wCount > 0 ? 'text-white' : 'text-gray-600'}`}>
@@ -100,9 +100,9 @@ export const GameReviewSummary: React.FC<GameReviewSummaryProps> = ({
                 </span>
 
                 {/* Classification label & badge */}
-                <div className="flex items-center justify-center gap-1.5 px-3">
+                <div className="flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3">
                   <span className={`font-bold ${cat.color}`}>{cat.symbol}</span>
-                  <span className="text-gray-300 font-sans text-[11px]">{cat.label}</span>
+                  <span className="text-gray-300 font-sans text-[10px] sm:text-[11px]">{cat.label}</span>
                 </div>
 
                 {/* Black count */}

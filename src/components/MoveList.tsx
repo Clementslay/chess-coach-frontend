@@ -47,12 +47,12 @@ export const MoveList: React.FC<MoveListProps> = ({ moves, currentPly, onSelectP
   }, [currentPly]);
 
   return (
-    <div className="rounded-2xl bg-[#262522] border border-[#363531] p-4 flex flex-col h-[320px]">
+    <div className="rounded-xl sm:rounded-2xl bg-[#262522] border border-[#363531] p-3 sm:p-4 flex flex-col h-[280px] sm:h-[340px]">
       <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#363531]">
         <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400">
-          Move Review List ({moves.length} plies)
+          Move Review ({moves.length} plies)
         </h4>
-        <span className="text-[11px] text-gray-500">Click move to jump</span>
+        <span className="text-[10px] sm:text-[11px] text-gray-500">Tap to jump</span>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-1 pr-1 font-mono text-xs">
@@ -64,10 +64,10 @@ export const MoveList: React.FC<MoveListProps> = ({ moves, currentPly, onSelectP
             <div
               key={turn.moveNumber}
               ref={isWhiteActive || isBlackActive ? activeRowRef : null}
-              className="grid grid-cols-[38px_1fr_1fr] gap-1.5 items-center px-1.5 py-1 rounded-lg hover:bg-[#2e2d2a] transition-colors"
+              className="grid grid-cols-[32px_1fr_1fr] sm:grid-cols-[38px_1fr_1fr] gap-1 sm:gap-1.5 items-center px-1 sm:px-1.5 py-0.5 rounded-lg hover:bg-[#2e2d2a] transition-colors"
             >
               {/* Move number */}
-              <span className="text-gray-500 text-[11px]">
+              <span className="text-gray-500 text-[10px] sm:text-[11px]">
                 {turn.moveNumber}.
               </span>
 
@@ -75,14 +75,14 @@ export const MoveList: React.FC<MoveListProps> = ({ moves, currentPly, onSelectP
               {turn.white ? (
                 <button
                   onClick={() => onSelectPly(turn.white!.ply)}
-                  className={`flex items-center justify-between px-2 py-1 rounded text-left transition-all ${
+                  className={`flex items-center justify-between px-2 py-1.5 sm:py-1 rounded text-left transition-all active:scale-95 ${
                     isWhiteActive
                       ? 'bg-[#81b64c] text-white font-bold shadow-sm'
                       : 'text-gray-200 hover:bg-[#363531]'
                   }`}
                 >
-                  <span>{turn.white.san}</span>
-                  <span className={`text-[10px] font-bold ${
+                  <span className="truncate">{turn.white.san}</span>
+                  <span className={`text-[10px] font-bold shrink-0 ml-1 ${
                     isWhiteActive ? 'text-white' : CLASSIFICATION_ICONS[turn.white.classification]?.color || 'text-gray-400'
                   }`}>
                     {CLASSIFICATION_ICONS[turn.white.classification]?.icon}
@@ -96,14 +96,14 @@ export const MoveList: React.FC<MoveListProps> = ({ moves, currentPly, onSelectP
               {turn.black ? (
                 <button
                   onClick={() => onSelectPly(turn.black!.ply)}
-                  className={`flex items-center justify-between px-2 py-1 rounded text-left transition-all ${
+                  className={`flex items-center justify-between px-2 py-1.5 sm:py-1 rounded text-left transition-all active:scale-95 ${
                     isBlackActive
                       ? 'bg-[#81b64c] text-white font-bold shadow-sm'
                       : 'text-gray-200 hover:bg-[#363531]'
                   }`}
                 >
-                  <span>{turn.black.san}</span>
-                  <span className={`text-[10px] font-bold ${
+                  <span className="truncate">{turn.black.san}</span>
+                  <span className={`text-[10px] font-bold shrink-0 ml-1 ${
                     isBlackActive ? 'text-white' : CLASSIFICATION_ICONS[turn.black.classification]?.color || 'text-gray-400'
                   }`}>
                     {CLASSIFICATION_ICONS[turn.black.classification]?.icon}

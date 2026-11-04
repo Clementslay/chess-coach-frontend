@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { Chessboard, Arrow } from 'react-chessboard';
 import { RotateCcw } from 'lucide-react';
 import { MoveEvaluation } from '../types/chess';
@@ -9,6 +9,8 @@ interface ChessboardViewProps {
   orientation: 'white' | 'black';
   onFlipOrientation: () => void;
   boardWidth?: number;
+  onSwipeLeft?: () => void;
+  onSwipeRight?: () => void;
 }
 
 const CLASSIFICATION_COLORS: Record<string, string> = {
@@ -29,8 +31,13 @@ export const ChessboardView: React.FC<ChessboardViewProps> = ({
   currentMove,
   orientation,
   onFlipOrientation,
-  boardWidth = 520
+  boardWidth,
+  onSwipeLeft,
+  onSwipeRight
 }) => {
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
   // Compute arrows
   const arrows = useMemo<Arrow[]>(() => {
     const arrowList: Arrow[] = [];
@@ -77,12 +84,42 @@ export const ChessboardView: React.FC<ChessboardViewProps> = ({
     return styles;
   }, [currentMove]);
 
+  // Touch handlers for mobile swipe navigation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      touchStartX.current = e.touches[0].clientX;
+      touchStartY.current = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+
+    // Detect horizontal swipe if deltaX is sufficiently larger than deltaY
+    if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
+      if (deltaX < 0) {
+        // Swiped left -> Next move
+        onSwipeLeft?.();
+      } else {
+        // Swiped right -> Previous move
+        onSwipeRight?.();
+      }
+    }
+
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
   return (
-    <div className="relative flex flex-col items-center">
-      {/* Board wrapper */}
+    <div className="relative flex flex-col items-center w-full">
+      {/* Board wrapper: fluid 1:1 aspect ratio */}
       <div 
-        className="rounded-2xl overflow-hidden shadow-2xl border-4 border-[#2b2a27] bg-[#2b2a27] relative"
-        style={{ width: boardWidth, maxWidth: '100%' }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="w-full aspect-square max-w-[540px] rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border-2 sm:border-4 border-[#2b2a27] bg-[#2b2a27] relative touch-pan-y"
+        style={boardWidth ? { maxWidth: boardWidth } : undefined}
       >
         <Chessboard
           options={{
@@ -101,22 +138,23 @@ export const ChessboardView: React.FC<ChessboardViewProps> = ({
         <button
           onClick={onFlipOrientation}
           title="Flip Board"
-          className="absolute bottom-2 right-2 p-2 rounded-xl bg-[#161719]/80 hover:bg-[#161719] backdrop-blur text-gray-300 hover:text-white border border-[#363531] shadow-lg transition-transform hover:rotate-180 z-20"
+          className="absolute bottom-2 right-2 p-2 sm:p-2.5 rounded-xl bg-[#161719]/80 hover:bg-[#161719] backdrop-blur text-gray-300 hover:text-white border border-[#363531] shadow-lg transition-transform active:scale-90 hover:rotate-180 z-20"
+          aria-label="Flip Board"
         >
-          <RotateCcw className="w-4 h-4" />
+          <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
       </div>
 
       {/* Legend below board */}
-      <div className="flex items-center gap-4 mt-2.5 text-[11px] text-gray-400">
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mt-2 text-[10px] sm:text-[11px] text-gray-400">
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
-          <span>Stockfish Recommendation</span>
+          <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#22c55e]" />
+          <span>Stockfish Rec</span>
         </div>
         {currentMove && (
           <div className="flex items-center gap-1.5">
             <span 
-              className="w-2.5 h-2.5 rounded-full"
+              className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full"
               style={{ backgroundColor: CLASSIFICATION_COLORS[currentMove.classification] || '#81b64c' }}
             />
             <span className="capitalize">{currentMove.classification.toLowerCase()} move played</span>

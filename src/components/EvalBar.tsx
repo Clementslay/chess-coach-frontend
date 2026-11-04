@@ -22,14 +22,17 @@ export const EvalBar: React.FC<EvalBarProps> = ({ scoreDisplay, winProbability, 
   const bottomColor = isFlipped ? 'bg-[#2b2926] text-gray-200' : 'bg-white text-gray-900';
 
   return (
-    <div className="relative w-8 h-full min-h-[380px] sm:min-h-[480px] rounded-lg overflow-hidden flex flex-col bg-[#1e1d1b] border border-[#363531] shadow-inner select-none">
+    <div 
+      className="relative w-full h-full min-h-0 rounded-md sm:rounded-lg overflow-hidden flex flex-col bg-[#1e1d1b] border border-[#363531] shadow-inner select-none"
+      title={`Evaluation: ${scoreDisplay} (${isWhiteAhead ? 'White' : 'Black'} advantage)`}
+    >
       {/* Top Section */}
       <div
-        className={`w-full transition-all duration-300 ease-out flex items-start justify-center pt-2 font-mono text-[11px] font-bold ${topColor}`}
+        className={`w-full transition-all duration-300 ease-out flex items-start justify-center pt-1.5 sm:pt-2 font-mono text-[8px] sm:text-[10px] md:text-[11px] font-extrabold ${topColor}`}
         style={{ height: `${topPercent}%` }}
       >
         {!isWhiteAhead && (
-          <span className="drop-shadow-sm px-0.5">
+          <span className="drop-shadow-sm px-0.5 truncate max-w-full text-center">
             {scoreDisplay}
           </span>
         )}
@@ -37,11 +40,11 @@ export const EvalBar: React.FC<EvalBarProps> = ({ scoreDisplay, winProbability, 
 
       {/* Bottom Section */}
       <div
-        className={`w-full transition-all duration-300 ease-out flex items-end justify-center pb-2 font-mono text-[11px] font-bold ${bottomColor}`}
+        className={`w-full transition-all duration-300 ease-out flex items-end justify-center pb-1.5 sm:pb-2 font-mono text-[8px] sm:text-[10px] md:text-[11px] font-extrabold ${bottomColor}`}
         style={{ height: `${bottomPercent}%` }}
       >
         {isWhiteAhead && (
-          <span className="drop-shadow-sm px-0.5">
+          <span className="drop-shadow-sm px-0.5 truncate max-w-full text-center">
             {scoreDisplay}
           </span>
         )}

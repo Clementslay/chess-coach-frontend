@@ -3,15 +3,23 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
     @apply bg-[#161719] text-gray-100 overflow-x-hidden;
+  }
+
+  button, a {
+    touch-action: manipulation;
   }
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {

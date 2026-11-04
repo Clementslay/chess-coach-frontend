@@ -9,9 +9,19 @@ import { StockfishCoachPanel } from './components/StockfishCoachPanel';
 import { MoveList } from './components/MoveList';
 import { GameReviewSummary } from './components/GameReviewSummary';
 import { AdvantageChart } from './components/AdvantageChart';
+import { MoveControls } from './components/MoveControls';
 import { GameAnalysisResponse, MoveEvaluation } from './types/chess';
 import { checkHealth, analyzeGame } from './services/api';
-import { Loader2, ArrowLeft, Calendar } from 'lucide-react';
+import { 
+  Loader2, 
+  ArrowLeft, 
+  Calendar, 
+  RotateCcw, 
+  Sparkles, 
+  ListOrdered, 
+  Trophy, 
+  TrendingUp 
+} from 'lucide-react';
 
 const PIECE_VALUES: Record<string, number> = {
   p: 1,
@@ -30,6 +40,7 @@ export const App: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [mobileTab, setMobileTab] = useState<'coach' | 'moves' | 'summary' | 'graph'>('coach');
 
   // Check health on mount
   useEffect(() => {
@@ -47,6 +58,7 @@ export const App: React.FC = () => {
       setAnalysis(result);
       setCurrentPly(0);
       setIsPlaying(false);
+      setMobileTab('coach');
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to analyze game.');
     } finally {
@@ -138,6 +150,9 @@ export const App: React.FC = () => {
     setCurrentPly(analysis.moves.length);
   }, [analysis]);
   const handleTogglePlay = useCallback(() => setIsPlaying((p) => !p), []);
+  const handleFlipBoard = useCallback(() => {
+    setBoardOrientation((o) => (o === 'white' ? 'black' : 'white'));
+  }, []);
 
   // Keyboard navigation
   useEffect(() => {
@@ -160,12 +175,15 @@ export const App: React.FC = () => {
       } else if (e.key === 'End') {
         e.preventDefault();
         handleLast();
+      } else if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        handleFlipBoard();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [analysis, handlePrev, handleNext, handleTogglePlay, handleFirst, handleLast]);
+  }, [analysis, handlePrev, handleNext, handleTogglePlay, handleFirst, handleLast, handleFlipBoard]);
 
   // Auto-play timer
   useEffect(() => {
@@ -204,25 +222,25 @@ export const App: React.FC = () => {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-2 py-3 sm:px-4 sm:py-6 lg:px-8">
         {/* Loading Overlay */}
         {isLoading && (
-          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center gap-4 text-white">
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center gap-4 text-white p-4">
             <Loader2 className="w-10 h-10 text-[#81b64c] animate-spin" />
             <div className="text-center">
-              <h3 className="text-lg font-bold">Stockfish Engine Analyzing Match...</h3>
-              <p className="text-sm text-gray-400">Evaluating moves, centipawn losses & tactical commentary</p>
+              <h3 className="text-base sm:text-lg font-bold">Stockfish Engine Analyzing Match...</h3>
+              <p className="text-xs sm:text-sm text-gray-400">Evaluating moves, centipawn losses & tactical commentary</p>
             </div>
           </div>
         )}
 
         {/* Error notification */}
         {errorMessage && (
-          <div className="max-w-2xl mx-auto mb-6 p-4 rounded-xl bg-red-950/60 border border-red-800 text-red-200 text-sm flex items-center justify-between">
+          <div className="max-w-2xl mx-auto mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl bg-red-950/60 border border-red-800 text-red-200 text-xs sm:text-sm flex items-center justify-between">
             <span>{errorMessage}</span>
             <button
               onClick={() => setErrorMessage(null)}
-              className="text-red-400 hover:text-white font-bold ml-4"
+              className="text-red-400 hover:text-white font-bold ml-4 p-1"
             >
               ✕
             </button>
@@ -234,35 +252,36 @@ export const App: React.FC = () => {
           <MatchSearch onAnalyze={handleAnalyzeGame} isLoading={isLoading} />
         ) : (
           /* View 2: Active Match Review */
-          <div className="space-y-6">
+          <div className="space-y-3 sm:space-y-4 lg:space-y-6">
             {/* Top Match Info Banner */}
-            <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-[#262522] border border-[#363531]">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between gap-2 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-[#262522] border border-[#363531]">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 <button
                   onClick={() => setAnalysis(null)}
-                  className="p-2 rounded-xl bg-[#1e2022] hover:bg-[#363531] text-gray-400 hover:text-white transition-colors"
+                  className="p-2 rounded-xl bg-[#1e2022] hover:bg-[#363531] text-gray-400 hover:text-white transition-colors shrink-0 active:scale-95"
                   title="Return to Match Search"
+                  aria-label="Return to Match Search"
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </button>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-sm sm:text-base font-bold text-white">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                    <h2 className="text-xs sm:text-base font-bold text-white truncate max-w-[160px] xs:max-w-[240px] sm:max-w-none">
                       {analysis.header.white} vs {analysis.header.black}
                     </h2>
-                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-[#81b64c]/20 text-[#81b64c] border border-[#81b64c]/30">
+                    <span className="text-[10px] sm:text-xs font-mono font-bold px-1.5 sm:px-2 py-0.5 rounded bg-[#81b64c]/20 text-[#81b64c] border border-[#81b64c]/30 shrink-0">
                       {analysis.header.result}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
-                    {analysis.header.event && <span>{analysis.header.event}</span>}
+                  <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-gray-400 mt-0.5">
+                    {analysis.header.event && <span className="truncate max-w-[120px] xs:max-w-none">{analysis.header.event}</span>}
                     {analysis.header.eco && (
-                      <span className="font-mono bg-[#1e2022] px-1.5 py-0.5 rounded">
-                        ECO: {analysis.header.eco}
+                      <span className="font-mono bg-[#1e2022] px-1 py-0.2 rounded shrink-0">
+                        {analysis.header.eco}
                       </span>
                     )}
                     {analysis.header.date && (
-                      <span className="flex items-center gap-1">
+                      <span className="hidden xs:flex items-center gap-1 shrink-0">
                         <Calendar className="w-3 h-3 text-gray-500" />
                         {analysis.header.date}
                       </span>
@@ -272,19 +291,24 @@ export const App: React.FC = () => {
               </div>
 
               {/* Quick action to flip board */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <button
-                  onClick={() => setBoardOrientation((o) => (o === 'white' ? 'black' : 'white'))}
-                  className="px-3 py-1.5 rounded-xl bg-[#1e2022] hover:bg-[#363531] text-xs font-semibold text-gray-300 border border-[#363531] transition-colors"
+                  onClick={handleFlipBoard}
+                  title={`Playing as ${boardOrientation === 'white' ? 'White' : 'Black'}. Click to flip.`}
+                  className="px-2.5 py-1.5 rounded-xl bg-[#1e2022] hover:bg-[#363531] text-[11px] sm:text-xs font-semibold text-gray-300 border border-[#363531] transition-all flex items-center gap-1.5 active:scale-95"
                 >
-                  Play as {boardOrientation === 'white' ? 'Black' : 'White'}
+                  <RotateCcw className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="hidden sm:inline">Flip: {boardOrientation === 'white' ? 'Black' : 'White'}</span>
+                  <span className="sm:hidden capitalize">{boardOrientation === 'white' ? 'Black' : 'White'}</span>
                 </button>
               </div>
             </div>
 
-            {/* Main Review Workspace: 2-column layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              {/* Left Column: Board + Headers + EvalBar (7 cols) */}
+            {/* ======================================================== */}
+            {/* DESKTOP LAYOUT (Screen >= lg) */}
+            {/* ======================================================== */}
+            <div className="hidden lg:grid lg:grid-cols-12 gap-6 items-start">
+              {/* Left Column: Board + Headers + EvalBar + Universal Controls + Flow (7 cols) */}
               <div className="lg:col-span-7 flex flex-col gap-3">
                 {/* Top Player Header (Opponent) */}
                 <PlayerHeader
@@ -293,27 +317,28 @@ export const App: React.FC = () => {
                   rating={boardOrientation === 'white' ? analysis.header.black_elo : analysis.header.white_elo}
                   capturedPieces={boardOrientation === 'white' ? blackCaptured : whiteCaptured}
                   materialDifference={boardOrientation === 'white' ? -materialDifference : materialDifference}
-                  isCurrentTurn={
-                    currentPly % 2 === (boardOrientation === 'white' ? 1 : 0)
-                  }
+                  isCurrentTurn={currentPly % 2 === (boardOrientation === 'white' ? 1 : 0)}
                   result={analysis.header.result}
                 />
 
                 {/* Board + Dynamic Eval Bar */}
-                <div className="flex items-stretch justify-center gap-2 sm:gap-3">
-                  <EvalBar
-                    scoreDisplay={scoreDisplay}
-                    winProbability={winProbability}
-                    orientation={boardOrientation}
-                  />
+                <div className="flex items-stretch justify-center gap-2 sm:gap-3 w-full">
+                  <div className="w-7 sm:w-8 shrink-0 flex flex-col">
+                    <EvalBar
+                      scoreDisplay={scoreDisplay}
+                      winProbability={winProbability}
+                      orientation={boardOrientation}
+                    />
+                  </div>
 
-                  <div className="flex-1 flex justify-center">
+                  <div className="flex-1 min-w-0 flex justify-center">
                     <ChessboardView
                       currentFen={currentFen}
                       currentMove={currentMove}
                       orientation={boardOrientation}
-                      onFlipOrientation={() => setBoardOrientation((o) => (o === 'white' ? 'black' : 'white'))}
-                      boardWidth={520}
+                      onFlipOrientation={handleFlipBoard}
+                      onSwipeLeft={handleNext}
+                      onSwipeRight={handlePrev}
                     />
                   </div>
                 </div>
@@ -325,10 +350,22 @@ export const App: React.FC = () => {
                   rating={boardOrientation === 'white' ? analysis.header.white_elo : analysis.header.black_elo}
                   capturedPieces={boardOrientation === 'white' ? whiteCaptured : blackCaptured}
                   materialDifference={boardOrientation === 'white' ? materialDifference : -materialDifference}
-                  isCurrentTurn={
-                    currentPly % 2 === (boardOrientation === 'white' ? 0 : 1)
-                  }
+                  isCurrentTurn={currentPly % 2 === (boardOrientation === 'white' ? 0 : 1)}
                   result={analysis.header.result}
+                />
+
+                {/* Universal Move Navigation Bar */}
+                <MoveControls
+                  currentPly={currentPly}
+                  totalPlies={analysis.moves.length}
+                  currentMove={currentMove}
+                  isPlaying={isPlaying}
+                  onFirst={handleFirst}
+                  onPrev={handlePrev}
+                  onNext={handleNext}
+                  onLast={handleLast}
+                  onTogglePlay={handleTogglePlay}
+                  onFlipBoard={handleFlipBoard}
                 />
 
                 {/* Advantage Chart */}
@@ -369,6 +406,164 @@ export const App: React.FC = () => {
                   blackAccuracy={analysis.black_accuracy}
                   summary={analysis.classifications_summary}
                 />
+              </div>
+            </div>
+
+            {/* ======================================================== */}
+            {/* MOBILE & TABLET LAYOUT (Screen < lg) */}
+            {/* ======================================================== */}
+            <div className="lg:hidden flex flex-col gap-3">
+              {/* Top Player Header (Opponent) */}
+              <PlayerHeader
+                color={boardOrientation === 'white' ? 'black' : 'white'}
+                name={boardOrientation === 'white' ? analysis.header.black : analysis.header.white}
+                rating={boardOrientation === 'white' ? analysis.header.black_elo : analysis.header.white_elo}
+                capturedPieces={boardOrientation === 'white' ? blackCaptured : whiteCaptured}
+                materialDifference={boardOrientation === 'white' ? -materialDifference : materialDifference}
+                isCurrentTurn={currentPly % 2 === (boardOrientation === 'white' ? 1 : 0)}
+                result={analysis.header.result}
+              />
+
+              {/* Board + Slim Eval Bar */}
+              <div className="flex items-stretch justify-center gap-1.5 xs:gap-2 w-full">
+                <div className="w-4 xs:w-5 sm:w-6 shrink-0 flex flex-col">
+                  <EvalBar
+                    scoreDisplay={scoreDisplay}
+                    winProbability={winProbability}
+                    orientation={boardOrientation}
+                  />
+                </div>
+
+                <div className="flex-1 min-w-0 flex justify-center">
+                  <ChessboardView
+                    currentFen={currentFen}
+                    currentMove={currentMove}
+                    orientation={boardOrientation}
+                    onFlipOrientation={handleFlipBoard}
+                    onSwipeLeft={handleNext}
+                    onSwipeRight={handlePrev}
+                  />
+                </div>
+              </div>
+
+              {/* Bottom Player Header (User) */}
+              <PlayerHeader
+                color={boardOrientation === 'white' ? 'white' : 'black'}
+                name={boardOrientation === 'white' ? analysis.header.white : analysis.header.black}
+                rating={boardOrientation === 'white' ? analysis.header.white_elo : analysis.header.black_elo}
+                capturedPieces={boardOrientation === 'white' ? whiteCaptured : blackCaptured}
+                materialDifference={boardOrientation === 'white' ? materialDifference : -materialDifference}
+                isCurrentTurn={currentPly % 2 === (boardOrientation === 'white' ? 0 : 1)}
+                result={analysis.header.result}
+              />
+
+              {/* High-visibility Thumb-Friendly Move Navigator */}
+              <MoveControls
+                currentPly={currentPly}
+                totalPlies={analysis.moves.length}
+                currentMove={currentMove}
+                isPlaying={isPlaying}
+                onFirst={handleFirst}
+                onPrev={handlePrev}
+                onNext={handleNext}
+                onLast={handleLast}
+                onTogglePlay={handleTogglePlay}
+                onFlipBoard={handleFlipBoard}
+              />
+
+              {/* Segmented Mobile Tabs */}
+              <div className="grid grid-cols-4 gap-1 p-1 bg-[#1e2022] rounded-xl border border-[#363531] mt-1 select-none">
+                <button
+                  onClick={() => setMobileTab('coach')}
+                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 sm:py-2.5 px-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
+                    mobileTab === 'coach'
+                      ? 'bg-[#81b64c] text-white shadow-md shadow-[#81b64c]/20'
+                      : 'text-gray-400 hover:text-white hover:bg-[#262522]'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Coach</span>
+                </button>
+
+                <button
+                  onClick={() => setMobileTab('moves')}
+                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 sm:py-2.5 px-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
+                    mobileTab === 'moves'
+                      ? 'bg-[#81b64c] text-white shadow-md shadow-[#81b64c]/20'
+                      : 'text-gray-400 hover:text-white hover:bg-[#262522]'
+                  }`}
+                >
+                  <ListOrdered className="w-3.5 h-3.5" />
+                  <span>Moves</span>
+                </button>
+
+                <button
+                  onClick={() => setMobileTab('summary')}
+                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 sm:py-2.5 px-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
+                    mobileTab === 'summary'
+                      ? 'bg-[#81b64c] text-white shadow-md shadow-[#81b64c]/20'
+                      : 'text-gray-400 hover:text-white hover:bg-[#262522]'
+                  }`}
+                >
+                  <Trophy className="w-3.5 h-3.5" />
+                  <span>Summary</span>
+                </button>
+
+                <button
+                  onClick={() => setMobileTab('graph')}
+                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 sm:py-2.5 px-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
+                    mobileTab === 'graph'
+                      ? 'bg-[#81b64c] text-white shadow-md shadow-[#81b64c]/20'
+                      : 'text-gray-400 hover:text-white hover:bg-[#262522]'
+                  }`}
+                >
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  <span>Flow</span>
+                </button>
+              </div>
+
+              {/* Mobile Active Tab Content */}
+              <div className="transition-all duration-200">
+                {mobileTab === 'coach' && (
+                  <StockfishCoachPanel
+                    currentMove={currentMove}
+                    currentPly={currentPly}
+                    totalPlies={analysis.moves.length}
+                    isPlaying={isPlaying}
+                    onFirst={handleFirst}
+                    onPrev={handlePrev}
+                    onNext={handleNext}
+                    onLast={handleLast}
+                    onTogglePlay={handleTogglePlay}
+                    hideNavControls={true}
+                  />
+                )}
+
+                {mobileTab === 'moves' && (
+                  <MoveList
+                    moves={analysis.moves}
+                    currentPly={currentPly}
+                    onSelectPly={(ply) => setCurrentPly(ply)}
+                  />
+                )}
+
+                {mobileTab === 'summary' && (
+                  <GameReviewSummary
+                    whiteName={analysis.header.white}
+                    blackName={analysis.header.black}
+                    whiteAccuracy={analysis.white_accuracy}
+                    blackAccuracy={analysis.black_accuracy}
+                    summary={analysis.classifications_summary}
+                  />
+                )}
+
+                {mobileTab === 'graph' && (
+                  <AdvantageChart
+                    evalCurve={analysis.eval_curve}
+                    currentPly={currentPly}
+                    onSelectPly={(ply) => setCurrentPly(ply)}
+                  />
+                )}
               </div>
             </div>
           </div>
