@@ -22,6 +22,7 @@ const CLASSIFICATION_ICONS: Record<string, { icon: string; color: string }> = {
 
 export const MoveList: React.FC<MoveListProps> = ({ moves, currentPly, onSelectPly }) => {
   const activeRowRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Group moves into full turns (pairs of White & Black plies)
   const groupedTurns = React.useMemo(() => {
@@ -36,13 +37,19 @@ export const MoveList: React.FC<MoveListProps> = ({ moves, currentPly, onSelectP
     return turns;
   }, [moves]);
 
-  // Auto-scroll active move into view
+  // Localized scroll: scrolls inner container only, NEVER the window or page
   useEffect(() => {
-    if (activeRowRef.current) {
-      activeRowRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest'
-      });
+    const container = containerRef.current;
+    const activeRow = activeRowRef.current;
+    if (!container || !activeRow) return;
+
+    const rowTop = activeRow.offsetTop - container.offsetTop;
+    const rowBottom = rowTop + activeRow.offsetHeight;
+
+    if (rowTop < container.scrollTop) {
+      container.scrollTop = rowTop;
+    } else if (rowBottom > container.scrollTop + container.clientHeight) {
+      container.scrollTop = rowBottom - container.clientHeight;
     }
   }, [currentPly]);
 
@@ -55,7 +62,7 @@ export const MoveList: React.FC<MoveListProps> = ({ moves, currentPly, onSelectP
         <span className="text-[10px] sm:text-[11px] text-gray-500">Tap to jump</span>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-1 pr-1 font-mono text-xs">
+      <div ref={containerRef} className="flex-1 overflow-y-auto space-y-1 pr-1 font-mono text-xs">
         {groupedTurns.map((turn) => {
           const isWhiteActive = turn.white && turn.white.ply === currentPly;
           const isBlackActive = turn.black && turn.black.ply === currentPly;

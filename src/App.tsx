@@ -17,7 +17,6 @@ import {
   ArrowLeft, 
   Calendar, 
   RotateCcw, 
-  Sparkles, 
   ListOrdered, 
   Trophy, 
   TrendingUp 
@@ -40,7 +39,7 @@ export const App: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [mobileTab, setMobileTab] = useState<'coach' | 'moves' | 'summary' | 'graph'>('coach');
+  const [mobileTab, setMobileTab] = useState<'moves' | 'summary' | 'graph'>('moves');
 
   // Check health on mount
   useEffect(() => {
@@ -58,7 +57,7 @@ export const App: React.FC = () => {
       setAnalysis(result);
       setCurrentPly(0);
       setIsPlaying(false);
-      setMobileTab('coach');
+      setMobileTab('moves');
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to analyze game.');
     } finally {
@@ -215,11 +214,13 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#161719] flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
-      {/* Top Navbar */}
-      <Navbar
-        onNewSearch={() => setAnalysis(null)}
-        stockfishAvailable={stockfishAvailable}
-      />
+      {/* Top Navbar: Only shown on Search screen, hidden in Review Mode */}
+      {!analysis && (
+        <Navbar
+          onNewSearch={() => setAnalysis(null)}
+          stockfishAvailable={stockfishAvailable}
+        />
+      )}
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-2 py-3 sm:px-4 sm:py-6 lg:px-8">
@@ -252,17 +253,18 @@ export const App: React.FC = () => {
           <MatchSearch onAnalyze={handleAnalyzeGame} isLoading={isLoading} />
         ) : (
           /* View 2: Active Match Review */
-          <div className="space-y-3 sm:space-y-4 lg:space-y-6">
-            {/* Top Match Info Banner */}
+          <div className="space-y-3 sm:space-y-4 lg:space-y-5">
+            {/* 1. First Banner: AAA vs YYY 1-0 + Play as White/Black button */}
             <div className="flex items-center justify-between gap-2 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-[#262522] border border-[#363531]">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 <button
                   onClick={() => setAnalysis(null)}
-                  className="p-2 rounded-xl bg-[#1e2022] hover:bg-[#363531] text-gray-400 hover:text-white transition-colors shrink-0 active:scale-95"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#1e2022] hover:bg-[#363531] text-gray-300 hover:text-white transition-colors shrink-0 active:scale-95 text-xs font-semibold border border-[#363531]"
                   title="Return to Match Search"
                   aria-label="Return to Match Search"
                 >
                   <ArrowLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Search Match</span>
                 </button>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
@@ -290,26 +292,37 @@ export const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* Quick action to flip board */}
+              {/* Play as White / Play as Black button */}
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   onClick={handleFlipBoard}
-                  title={`Playing as ${boardOrientation === 'white' ? 'White' : 'Black'}. Click to flip.`}
-                  className="px-2.5 py-1.5 rounded-xl bg-[#1e2022] hover:bg-[#363531] text-[11px] sm:text-xs font-semibold text-gray-300 border border-[#363531] transition-all flex items-center gap-1.5 active:scale-95"
+                  title={`Currently viewing as ${boardOrientation === 'white' ? 'White' : 'Black'}. Click to flip perspective.`}
+                  className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-[#1e2022] hover:bg-[#363531] text-[11px] sm:text-xs font-semibold text-gray-200 hover:text-white border border-[#363531] transition-all flex items-center gap-1.5 active:scale-95"
                 >
-                  <RotateCcw className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="hidden sm:inline">Flip: {boardOrientation === 'white' ? 'Black' : 'White'}</span>
-                  <span className="sm:hidden capitalize">{boardOrientation === 'white' ? 'Black' : 'White'}</span>
+                  <RotateCcw className="w-3.5 h-3.5 text-[#81b64c]" />
+                  <span>Play as {boardOrientation === 'white' ? 'White' : 'Black'}</span>
                 </button>
               </div>
             </div>
 
-            {/* ======================================================== */}
-            {/* DESKTOP LAYOUT (Screen >= lg) */}
-            {/* ======================================================== */}
-            <div className="hidden lg:grid lg:grid-cols-12 gap-6 items-start">
-              {/* Left Column: Board + Headers + EvalBar + Universal Controls + Flow (7 cols) */}
-              <div className="lg:col-span-7 flex flex-col gap-3">
+            {/* 2. Second Banner: Stockfish Coach Notes (Always visible at the top without scrolling) */}
+            <StockfishCoachPanel
+              currentMove={currentMove}
+              currentPly={currentPly}
+              totalPlies={analysis.moves.length}
+              isPlaying={isPlaying}
+              onFirst={handleFirst}
+              onPrev={handlePrev}
+              onNext={handleNext}
+              onLast={handleLast}
+              onTogglePlay={handleTogglePlay}
+              hideNavControls={true}
+            />
+
+            {/* Responsive Main Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start">
+              {/* Left Column (Desktop 7 cols) / Top Section (Mobile): Board, Headers, Eval, Controls */}
+              <div className="lg:col-span-7 flex flex-col gap-2.5 sm:gap-3">
                 {/* Top Player Header (Opponent) */}
                 <PlayerHeader
                   color={boardOrientation === 'white' ? 'black' : 'white'}
@@ -322,8 +335,8 @@ export const App: React.FC = () => {
                 />
 
                 {/* Board + Dynamic Eval Bar */}
-                <div className="flex items-stretch justify-center gap-2 sm:gap-3 w-full">
-                  <div className="w-7 sm:w-8 shrink-0 flex flex-col">
+                <div className="flex items-stretch justify-center gap-1.5 xs:gap-2 sm:gap-3 w-full">
+                  <div className="w-4 xs:w-5 sm:w-7 md:w-8 shrink-0 flex flex-col">
                     <EvalBar
                       scoreDisplay={scoreDisplay}
                       winProbability={winProbability}
@@ -368,186 +381,26 @@ export const App: React.FC = () => {
                   onFlipBoard={handleFlipBoard}
                 />
 
-                {/* Advantage Chart */}
-                <AdvantageChart
-                  evalCurve={analysis.eval_curve}
-                  currentPly={currentPly}
-                  onSelectPly={(ply) => setCurrentPly(ply)}
-                />
-              </div>
-
-              {/* Right Column: Coach Commentary, Move List & Accuracy (5 cols) */}
-              <div className="lg:col-span-5 flex flex-col gap-5">
-                {/* Stockfish Coach Panel */}
-                <StockfishCoachPanel
-                  currentMove={currentMove}
-                  currentPly={currentPly}
-                  totalPlies={analysis.moves.length}
-                  isPlaying={isPlaying}
-                  onFirst={handleFirst}
-                  onPrev={handlePrev}
-                  onNext={handleNext}
-                  onLast={handleLast}
-                  onTogglePlay={handleTogglePlay}
-                />
-
-                {/* Move List */}
-                <MoveList
-                  moves={analysis.moves}
-                  currentPly={currentPly}
-                  onSelectPly={(ply) => setCurrentPly(ply)}
-                />
-
-                {/* Game Review Summary */}
-                <GameReviewSummary
-                  whiteName={analysis.header.white}
-                  blackName={analysis.header.black}
-                  whiteAccuracy={analysis.white_accuracy}
-                  blackAccuracy={analysis.black_accuracy}
-                  summary={analysis.classifications_summary}
-                />
-              </div>
-            </div>
-
-            {/* ======================================================== */}
-            {/* MOBILE & TABLET LAYOUT (Screen < lg) */}
-            {/* ======================================================== */}
-            <div className="lg:hidden flex flex-col gap-3">
-              {/* Top Player Header (Opponent) */}
-              <PlayerHeader
-                color={boardOrientation === 'white' ? 'black' : 'white'}
-                name={boardOrientation === 'white' ? analysis.header.black : analysis.header.white}
-                rating={boardOrientation === 'white' ? analysis.header.black_elo : analysis.header.white_elo}
-                capturedPieces={boardOrientation === 'white' ? blackCaptured : whiteCaptured}
-                materialDifference={boardOrientation === 'white' ? -materialDifference : materialDifference}
-                isCurrentTurn={currentPly % 2 === (boardOrientation === 'white' ? 1 : 0)}
-                result={analysis.header.result}
-              />
-
-              {/* Board + Slim Eval Bar */}
-              <div className="flex items-stretch justify-center gap-1.5 xs:gap-2 w-full">
-                <div className="w-4 xs:w-5 sm:w-6 shrink-0 flex flex-col">
-                  <EvalBar
-                    scoreDisplay={scoreDisplay}
-                    winProbability={winProbability}
-                    orientation={boardOrientation}
-                  />
-                </div>
-
-                <div className="flex-1 min-w-0 flex justify-center">
-                  <ChessboardView
-                    currentFen={currentFen}
-                    currentMove={currentMove}
-                    orientation={boardOrientation}
-                    onFlipOrientation={handleFlipBoard}
-                    onSwipeLeft={handleNext}
-                    onSwipeRight={handlePrev}
-                  />
-                </div>
-              </div>
-
-              {/* Bottom Player Header (User) */}
-              <PlayerHeader
-                color={boardOrientation === 'white' ? 'white' : 'black'}
-                name={boardOrientation === 'white' ? analysis.header.white : analysis.header.black}
-                rating={boardOrientation === 'white' ? analysis.header.white_elo : analysis.header.black_elo}
-                capturedPieces={boardOrientation === 'white' ? whiteCaptured : blackCaptured}
-                materialDifference={boardOrientation === 'white' ? materialDifference : -materialDifference}
-                isCurrentTurn={currentPly % 2 === (boardOrientation === 'white' ? 0 : 1)}
-                result={analysis.header.result}
-              />
-
-              {/* High-visibility Thumb-Friendly Move Navigator */}
-              <MoveControls
-                currentPly={currentPly}
-                totalPlies={analysis.moves.length}
-                currentMove={currentMove}
-                isPlaying={isPlaying}
-                onFirst={handleFirst}
-                onPrev={handlePrev}
-                onNext={handleNext}
-                onLast={handleLast}
-                onTogglePlay={handleTogglePlay}
-                onFlipBoard={handleFlipBoard}
-              />
-
-              {/* Segmented Mobile Tabs */}
-              <div className="grid grid-cols-4 gap-1 p-1 bg-[#1e2022] rounded-xl border border-[#363531] mt-1 select-none">
-                <button
-                  onClick={() => setMobileTab('coach')}
-                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 sm:py-2.5 px-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
-                    mobileTab === 'coach'
-                      ? 'bg-[#81b64c] text-white shadow-md shadow-[#81b64c]/20'
-                      : 'text-gray-400 hover:text-white hover:bg-[#262522]'
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Coach</span>
-                </button>
-
-                <button
-                  onClick={() => setMobileTab('moves')}
-                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 sm:py-2.5 px-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
-                    mobileTab === 'moves'
-                      ? 'bg-[#81b64c] text-white shadow-md shadow-[#81b64c]/20'
-                      : 'text-gray-400 hover:text-white hover:bg-[#262522]'
-                  }`}
-                >
-                  <ListOrdered className="w-3.5 h-3.5" />
-                  <span>Moves</span>
-                </button>
-
-                <button
-                  onClick={() => setMobileTab('summary')}
-                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 sm:py-2.5 px-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
-                    mobileTab === 'summary'
-                      ? 'bg-[#81b64c] text-white shadow-md shadow-[#81b64c]/20'
-                      : 'text-gray-400 hover:text-white hover:bg-[#262522]'
-                  }`}
-                >
-                  <Trophy className="w-3.5 h-3.5" />
-                  <span>Summary</span>
-                </button>
-
-                <button
-                  onClick={() => setMobileTab('graph')}
-                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 sm:py-2.5 px-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
-                    mobileTab === 'graph'
-                      ? 'bg-[#81b64c] text-white shadow-md shadow-[#81b64c]/20'
-                      : 'text-gray-400 hover:text-white hover:bg-[#262522]'
-                  }`}
-                >
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  <span>Flow</span>
-                </button>
-              </div>
-
-              {/* Mobile Active Tab Content */}
-              <div className="transition-all duration-200">
-                {mobileTab === 'coach' && (
-                  <StockfishCoachPanel
-                    currentMove={currentMove}
+                {/* Advantage Chart (Desktop only - under controls) */}
+                <div className="hidden lg:block">
+                  <AdvantageChart
+                    evalCurve={analysis.eval_curve}
                     currentPly={currentPly}
-                    totalPlies={analysis.moves.length}
-                    isPlaying={isPlaying}
-                    onFirst={handleFirst}
-                    onPrev={handlePrev}
-                    onNext={handleNext}
-                    onLast={handleLast}
-                    onTogglePlay={handleTogglePlay}
-                    hideNavControls={true}
+                    onSelectPly={(ply) => setCurrentPly(ply)}
                   />
-                )}
+                </div>
+              </div>
 
-                {mobileTab === 'moves' && (
+              {/* Right Column (Desktop 5 cols) / Bottom Section (Mobile) */}
+              <div className="lg:col-span-5 flex flex-col gap-4">
+                {/* Desktop Panels: MoveList, Summary */}
+                <div className="hidden lg:flex flex-col gap-5">
                   <MoveList
                     moves={analysis.moves}
                     currentPly={currentPly}
                     onSelectPly={(ply) => setCurrentPly(ply)}
                   />
-                )}
 
-                {mobileTab === 'summary' && (
                   <GameReviewSummary
                     whiteName={analysis.header.white}
                     blackName={analysis.header.black}
@@ -555,15 +408,78 @@ export const App: React.FC = () => {
                     blackAccuracy={analysis.black_accuracy}
                     summary={analysis.classifications_summary}
                   />
-                )}
+                </div>
 
-                {mobileTab === 'graph' && (
-                  <AdvantageChart
-                    evalCurve={analysis.eval_curve}
-                    currentPly={currentPly}
-                    onSelectPly={(ply) => setCurrentPly(ply)}
-                  />
-                )}
+                {/* Mobile Tabbed View (Screens < lg) */}
+                <div className="lg:hidden flex flex-col gap-3">
+                  {/* Segmented Mobile Tabs: Moves | Summary | Flow */}
+                  <div className="grid grid-cols-3 gap-1 p-1 bg-[#1e2022] rounded-xl border border-[#363531] mt-1 select-none">
+                    <button
+                      onClick={() => setMobileTab('moves')}
+                      className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 sm:py-2.5 px-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
+                        mobileTab === 'moves'
+                          ? 'bg-[#81b64c] text-white shadow-md shadow-[#81b64c]/20'
+                          : 'text-gray-400 hover:text-white hover:bg-[#262522]'
+                      }`}
+                    >
+                      <ListOrdered className="w-3.5 h-3.5" />
+                      <span>Moves</span>
+                    </button>
+
+                    <button
+                      onClick={() => setMobileTab('summary')}
+                      className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 sm:py-2.5 px-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
+                        mobileTab === 'summary'
+                          ? 'bg-[#81b64c] text-white shadow-md shadow-[#81b64c]/20'
+                          : 'text-gray-400 hover:text-white hover:bg-[#262522]'
+                      }`}
+                    >
+                      <Trophy className="w-3.5 h-3.5" />
+                      <span>Summary</span>
+                    </button>
+
+                    <button
+                      onClick={() => setMobileTab('graph')}
+                      className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 sm:py-2.5 px-1 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
+                        mobileTab === 'graph'
+                          ? 'bg-[#81b64c] text-white shadow-md shadow-[#81b64c]/20'
+                          : 'text-gray-400 hover:text-white hover:bg-[#262522]'
+                      }`}
+                    >
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      <span>Flow</span>
+                    </button>
+                  </div>
+
+                  {/* Mobile Active Tab Content */}
+                  <div className="transition-all duration-200">
+                    {mobileTab === 'moves' && (
+                      <MoveList
+                        moves={analysis.moves}
+                        currentPly={currentPly}
+                        onSelectPly={(ply) => setCurrentPly(ply)}
+                      />
+                    )}
+
+                    {mobileTab === 'summary' && (
+                      <GameReviewSummary
+                        whiteName={analysis.header.white}
+                        blackName={analysis.header.black}
+                        whiteAccuracy={analysis.white_accuracy}
+                        blackAccuracy={analysis.black_accuracy}
+                        summary={analysis.classifications_summary}
+                      />
+                    )}
+
+                    {mobileTab === 'graph' && (
+                      <AdvantageChart
+                        evalCurve={analysis.eval_curve}
+                        currentPly={currentPly}
+                        onSelectPly={(ply) => setCurrentPly(ply)}
+                      />
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
